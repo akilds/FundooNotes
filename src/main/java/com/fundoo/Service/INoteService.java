@@ -5,25 +5,32 @@ import java.util.List;
 import javax.validation.Valid;
 
 import com.fundoo.DTO.NoteDTO;
+import com.fundoo.Model.ColabData;
 import com.fundoo.Model.NoteData;
 import com.fundoo.util.Response;
 
 public interface INoteService {
 
-	List<NoteData> getAllNotes(String token);
+	List<NoteData> getAllNotes(String userToken);
 
-	Response addNote(@Valid NoteDTO noteDTO);
+	Response addNote(String userToken,@Valid NoteDTO noteDTO);
 
-	Response updateNote(String token, @Valid NoteDTO noteDTO);
+	Response updateNote(int noteId, @Valid NoteDTO noteDTO);
 
-	Response deleteNote(String token);
+	Response deleteNote(int noteId);
 
-	List<NoteData> getAllNotesInTrash(String token);
+	List<NoteData> getAllNotesInTrash(String userToken);
 
-	List<NoteData> getAllNotesInArchieve(String token);
+	List<NoteData> getAllNotesInArchieve(String userToken);
 
-	Response updateNoteToArchieved(String token);
+	Response updateNoteToArchieved(int noteId);
 
-	Response updateNoteToPinned(String token);
+	Response updateNoteToPinned(int noteId);
+
+	List<ColabData> getAllCollaborators(int colabId);
+
+	Response addCollaboratorToNote(int noteId, String emailId);
+
+	Response removeCollaboratorFromNote(int colabId);
 
 }

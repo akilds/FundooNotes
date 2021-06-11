@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fundoo.DTO.NoteDTO;
+import com.fundoo.Model.ColabData;
 import com.fundoo.Model.NoteData;
 import com.fundoo.Service.INoteService;
 import com.fundoo.util.Response;
@@ -33,67 +34,93 @@ public class NoteController {
 	private INoteService noteService;
 	
 	//Returns all the notes present
-	@GetMapping("/getallnotes/{token}")
-	public ResponseEntity<List<?>> getAllNotes(@PathVariable String token) {
+	@GetMapping("/getallnotes/{userToken}")
+	public ResponseEntity<List<?>> getAllNotes(@PathVariable String userToken) {
 		log.info("Get All Notes");
-		List<NoteData> response = noteService.getAllNotes(token);
+		List<NoteData> response = noteService.getAllNotes(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
 	}
 	
 	//Returns all the notes in trash
-	@GetMapping("/getallnotesbytrash/{token}")
-	public ResponseEntity<List<?>> getAllNotesByTrash(@PathVariable String token) {
+	@GetMapping("/getallnotesbytrash/{userToken}")
+	public ResponseEntity<List<?>> getAllNotesByTrash(@PathVariable String userToken) {
 		log.info("Get All Notes In Trash");
-		List<NoteData> response = noteService.getAllNotesInTrash(token);
+		List<NoteData> response = noteService.getAllNotesInTrash(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
 	}
 	
 	//Returns all the notes in archieve
-	@GetMapping("/getallnotesbyarchieve/{token}")
-	public ResponseEntity<List<?>> getAllNotesByArchieve(@PathVariable String token) {
+	@GetMapping("/getallnotesbyarchieve/{userId}")
+	public ResponseEntity<List<?>> getAllNotesByArchieve(@PathVariable String userToken) {
 		log.info("Get All Notes In Archieve");
-		List<NoteData> response = noteService.getAllNotesInArchieve(token);
+		List<NoteData> response = noteService.getAllNotesInArchieve(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);	
 	}
 	
+	//Returns all the collaborators present
+	@GetMapping("/getallcollaborators/{colabId}")
+	public ResponseEntity<List<?>> getAllCollaborators(@PathVariable int colabId) {
+		log.info("Get All Notes");
+		List<ColabData> response = noteService.getAllCollaborators(colabId);
+		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
+	}
+		
 	//Creates a new note 
-	@PostMapping("/addnewnote")
-	public ResponseEntity<Response> createUser(@Valid @RequestBody NoteDTO noteDTO) {
+	@PostMapping("/addnewnote/{userId}")
+	public ResponseEntity<Response> createNote(@PathVariable String userToken,
+											   @Valid @RequestBody NoteDTO noteDTO) {
 		log.info("Create Note : " + noteDTO);
-		Response response  = noteService.addNote(noteDTO);
+		Response response = noteService.addNote(userToken,noteDTO);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
+	//Adds a new Collaborator
+	@PostMapping("/addcollaboratortonote")
+	public ResponseEntity<Response> addCollaboratorToNote(@RequestParam int noteId,
+														  @RequestParam String emailId) {
+		log.info("Collaborator Added To Note");
+		Response response  = noteService.addCollaboratorToNote(noteId,emailId);
+		return new ResponseEntity<Response>(response, HttpStatus.OK);
+	}
+		
 	//Updates an existing note
-	@PutMapping("/updatenote/{token}")
-	public ResponseEntity<Response> updateUser(@PathVariable String token,
+	@PutMapping("/updatenote/{noteId}")
+	public ResponseEntity<Response> updateNote(@PathVariable int noteId,
 											   @Valid @RequestBody NoteDTO noteDTO) {
 		log.info("Update Note : " + noteDTO);
-		Response response  = noteService.updateNote(token, noteDTO);
+		Response response  = noteService.updateNote(noteId, noteDTO);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
 	//Updates an existing note to archieve
-	@PutMapping("/archievenote/{token}")
-	public ResponseEntity<Response> updateUserToArchieved(@PathVariable String token) {
+	@PutMapping("/archievenote/{noteId}")
+	public ResponseEntity<Response> updateNoteToArchieved(@PathVariable int noteId) {
 		log.info("Note Archieved ");
-		Response response  = noteService.updateNoteToArchieved(token);
+		Response response  = noteService.updateNoteToArchieved(noteId);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 
 	//Updates an existing note to pin
-	@PutMapping("/pinnote/{token}")
-	public ResponseEntity<Response> updateUserToPinned(@PathVariable String token) {
+	@PutMapping("/pinnote/{noteId}")
+	public ResponseEntity<Response> updateNoteToPinned(@PathVariable int noteId) {
 		log.info("Note Pinned");
-		Response response  = noteService.updateNoteToPinned(token);
+		Response response  = noteService.updateNoteToPinned(noteId);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
+	//Removes an existing collaborator
+	@DeleteMapping("/removecollaboratorfromnote/{colabId}")
+	public ResponseEntity<Response> removeCollaboratorFromNote(@PathVariable int colabId) {
+		log.info("Collaborator Removed From Note");
+		Response response  = noteService.removeCollaboratorFromNote(colabId);
+		return new ResponseEntity<Response>(response, HttpStatus.OK);
+	}
+		
 	//Deletes an existing note
 	@DeleteMapping("/deletenote")
-	public ResponseEntity<Response> deleteUser(@RequestParam String token) {
+	public ResponseEntity<Response> deleteNote(@RequestParam int noteId) {
 		log.info("Note Moved To Trash");
-		Response response  = noteService.deleteNote(token);
+		Response response  = noteService.deleteNote(noteId);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 }
