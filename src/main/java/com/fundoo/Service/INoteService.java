@@ -29,8 +29,12 @@ public interface INoteService {
 
 	List<ColabData> getAllCollaborators(int colabId);
 
-	Response addCollaboratorToNote(int noteId, String emailId);
-
+	Response addCollaboratorToNote(String token, int noteId, String emailId);
+	
 	Response removeCollaboratorFromNote(int colabId);
+
+	Response updateNoteToTrash(int noteId);
+
+	
 
 }

@@ -66,7 +66,7 @@ public class NoteController {
 	}
 		
 	//Creates a new note 
-	@PostMapping("/addnewnote/{userId}")
+	@PostMapping("/addnewnote/{userToken}")
 	public ResponseEntity<Response> createNote(@PathVariable String userToken,
 											   @Valid @RequestBody NoteDTO noteDTO) {
 		log.info("Create Note : " + noteDTO);
@@ -75,11 +75,12 @@ public class NoteController {
 	}
 	
 	//Adds a new Collaborator
-	@PostMapping("/addcollaboratortonote")
-	public ResponseEntity<Response> addCollaboratorToNote(@RequestParam int noteId,
+	@PostMapping("/addcollaboratortonote/{token}")
+	public ResponseEntity<Response> addCollaboratorToNote(@PathVariable String token,
+														  @RequestParam int noteId,
 														  @RequestParam String emailId) {
 		log.info("Collaborator Added To Note");
-		Response response  = noteService.addCollaboratorToNote(noteId,emailId);
+		Response response  = noteService.addCollaboratorToNote(token,noteId,emailId);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 		
@@ -108,6 +109,14 @@ public class NoteController {
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
+	//Updates an existing note to pin
+	@PutMapping("/trashnote/{noteId}")
+	public ResponseEntity<Response> updateNoteToTrash(@PathVariable int noteId) {
+		log.info("Note to Trash");
+		Response response  = noteService.updateNoteToTrash(noteId);
+		return new ResponseEntity<Response>(response, HttpStatus.OK);
+	}
+		
 	//Removes an existing collaborator
 	@DeleteMapping("/removecollaboratorfromnote/{colabId}")
 	public ResponseEntity<Response> removeCollaboratorFromNote(@PathVariable int colabId) {

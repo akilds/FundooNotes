@@ -2,10 +2,12 @@ package com.fundoo.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.fundoo.DTO.NoteDTO;
 import com.fundoo.Model.ColabData;
@@ -33,10 +35,9 @@ public class NoteService implements INoteService{
 	
 	@Autowired
 	private TokenUtil tokenUtil;
-
-	List<NoteData> trash;
 	
-	List<NoteData> archieve;
+	@Autowired
+	private RestTemplate restTemplate;
 	
 	//Returns all note present
 	@Override
@@ -60,7 +61,8 @@ public class NoteService implements INoteService{
 		Optional<NoteData> isPresent = noteRepository.findByUserId(userId);
 		if(isPresent.isPresent()) {
 			log.info("Get All Notes In Trash");
-			return trash;
+			List<NoteData> note = noteRepository.findAll();
+			return note.stream().filter(not -> not.isTrash()==true).collect(Collectors.toList());
 		}else {
 			log.error("Note Is Not Present");
 			throw new NoteException(400, "Note Is Not Present");
@@ -74,7 +76,8 @@ public class NoteService implements INoteService{
 		Optional<NoteData> isPresent = noteRepository.findByUserId(userId);
 		if(isPresent.isPresent()) {
 			log.info("Get All Notes In Archieve");
-			return archieve;
+			List<NoteData> note = noteRepository.findAll();
+			return note.stream().filter(not -> not.isArchieve()==true).collect(Collectors.toList());
 		}else {
 			log.error("Note Is Not Present");
 			throw new NoteException(400, "Note Is Not Present");
@@ -108,16 +111,41 @@ public class NoteService implements INoteService{
 	
 	//Adds a new Collaborator
 	@Override
-	public Response addCollaboratorToNote(int noteId, String emailId) {
+	public Response addCollaboratorToNote(String token,int noteId, String emailId) {
+		int userId = tokenUtil.decodeToken(token);
 		Optional<NoteData> note = noteRepository.findById(noteId);
-		log.info("Collaborator Added ");
-		ColabData colab = new ColabData();
-		colab.setEmailId(emailId);
-		colab.setNoteId(noteId);
-		note.get().getCollaborator().add(colab);
-		colabRepository.save(colab);
-		noteRepository.save(note.get());
-		return new Response(200, "Collaborator Added Successfully", colab.getColabId());
+		String uri = "http://localhost:8081/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
+//			boolean isEmailPresent = restTemplate.getForObject("http//localhost:8080/userregistration/verifyuserid/"+userId, Boolean.class);
+//			if(isEmailPresent) {
+				List<ColabData> colabb = colabRepository.findAll();
+				boolean isNoteIdPresent = colabb.stream()
+										  .anyMatch(col -> (col.getEmailId()==emailId && col.getNoteId()==noteId));
+				if(isNoteIdPresent) {
+					log.error("Colab Is Already Present");
+					throw new NoteException(400, "Colab Is Already Present");
+				}else {
+					log.info("Collaborator Added ");
+					ColabData colab = new ColabData();
+					colab.setEmailId(emailId);
+					colab.setNoteId(noteId);
+					colabRepository.save(colab);
+					NoteData not = new NoteData();
+					not.setTitle(note.get().getTitle());
+					not.setDescription(note.get().getDescription());
+					not.setEmailId(emailId);
+					noteRepository.save(note.get());
+					return new Response(200, "Collaborator Added Successfully", colab.getColabId());
+				}
+//			}else {
+//				log.error("Colab Is Not Present");
+//				throw new NoteException(400, "Colab Is Not Present");
+//			}
+		}else {
+			log.error("Colab Is Not Present");
+			throw new NoteException(400, "Colab Is Not Present");
+		}
 	}
 	
 	//Updates an existing note
@@ -143,13 +171,11 @@ public class NoteService implements INoteService{
 			if(isPresent.get().isArchieve()==false) {
 				log.info("Note Is Archieved");
 				isPresent.get().setArchieve(true);
-				archieve.add(isPresent.get());
 				noteRepository.save(isPresent.get());
 				return new Response(200, "Note Archieved Successfully", noteId);
 			}else {
 				log.info("Note Is UnArchieved");
 				isPresent.get().setArchieve(false);
-				archieve.remove(isPresent.get());
 				noteRepository.save(isPresent.get());
 				return new Response(200, "Note UnArchieved Successfully", noteId);
 			}
@@ -181,6 +207,26 @@ public class NoteService implements INoteService{
 		}	
 	}
 	
+	@Override
+	public Response updateNoteToTrash(int noteId) {
+		Optional<NoteData> isPresent = noteRepository.findById(noteId);
+		if(isPresent.isPresent()) {
+			if(isPresent.get().isTrash()==false) {
+				log.info("Note is Trashed");
+				isPresent.get().setTrash(true);
+				noteRepository.save(isPresent.get());
+				return new Response(200, "Note Trashed Successfully", noteId);
+			}else {
+				log.info("Note is UnTrashed");
+				isPresent.get().setTrash(false);
+				noteRepository.save(isPresent.get());
+				return new Response(200, "Note UnTrashed Successfully", noteId);
+			}
+		}else {
+			log.error("Note Is Not Present");
+			throw new NoteException(400, "Note Is Not Present");
+		}	
+	}
 	//Removes an existing Collaborator
 	@Override
 	public Response removeCollaboratorFromNote(int colabId) {
@@ -203,18 +249,9 @@ public class NoteService implements INoteService{
 	public Response deleteNote(int noteId) {
 		Optional<NoteData> isPresent = noteRepository.findById(noteId);
 		if(isPresent.isPresent()) {
-			if(isPresent.get().isTrash()==false) {
-				log.info("Note Moved To Trash");
-				isPresent.get().setTrash(true);
-				trash.add(isPresent.get());
-				noteRepository.save(isPresent.get());
-				return new Response(200, "Note Moved To Trash Successfully", noteId);
-			}else {
-				log.info("Note Moved To Trash");
-				trash.remove(isPresent.get());
-				noteRepository.delete(isPresent.get());
-				return new Response(200, "Note Removed From Trash Successfully", noteId);
-			}
+			log.info("Note Moved To Trash");
+			noteRepository.delete(isPresent.get());
+			return new Response(200, "Note Removed From Trash Successfully", noteId);
 		}else {
 			log.error("Note Is Not Present");
 			throw new NoteException(400, "Note Is Not Present");
