@@ -14,12 +14,12 @@ public interface ILabelService {
 
 	Response addLabel(String userToken, @Valid LabelDTO labelDTO);
 
-	Response updateLabel(int labelId, @Valid LabelDTO labelDTO);
+	Response updateLabel(int labelId, @Valid LabelDTO labelDTO, String userToken);
 
-	Response deleteLabel(int labelId);
+	Response deleteLabel(int labelId, String userToken);
 
-	Response updateNoteAsLabel(int labelId, int noteId);
+	Response updateNoteAsLabel(int labelId, int noteId, String userToken);
 
-	Response removeNoteAsLabel(int labelId, int noteId);
+	Response removeNoteAsLabel(int labelId, int noteId, String userToken);
 
 }

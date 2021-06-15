@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.fundoo.DTO.LabelDTO;
 import com.fundoo.Model.LabelData;
@@ -36,12 +37,16 @@ public class LabelService implements ILabelService{
 	@Autowired
 	private TokenUtil tokenUtil;
 	
+	@Autowired
+	private RestTemplate restTemplate;
+	
 	//Returns all the label present
 	@Override
 	public List<LabelData> getAllLabels(String userToken) {
 		int userId = tokenUtil.decodeToken(userToken);
-		Optional<LabelData> isPresent = labelRepository.findByUserId(userId);
-		if(isPresent.isPresent()) {
+		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
 			log.info("Get All Labels");
 			List<LabelData> getAllLabels = labelRepository.findAll();
 			return getAllLabels;
@@ -55,7 +60,9 @@ public class LabelService implements ILabelService{
 	@Override
 	public Response addLabel(String userToken,@Valid LabelDTO labelDTO) {
 		int userId = tokenUtil.decodeToken(userToken);
-		if(userId!=0) {
+		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
 			log.info("Add Label : " + labelDTO);
 			LabelData label = modelmapper.map(labelDTO, LabelData.class);
 			label.setUserId(userId);
@@ -69,9 +76,12 @@ public class LabelService implements ILabelService{
 
 	//Updates an existing label
 	@Override
-	public Response updateLabel(int labelId, @Valid LabelDTO labelDTO) {
+	public Response updateLabel(int labelId, @Valid LabelDTO labelDTO, String userToken) {
 		Optional<LabelData> isPresent = labelRepository.findById(labelId);
-		if(isPresent.isPresent()) {
+		int userId = tokenUtil.decodeToken(userToken);
+		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
 			log.info("Update Label : " + labelDTO);
 			isPresent.get().updateLabel(labelDTO);
 			labelRepository.save(isPresent.get());
@@ -84,68 +94,87 @@ public class LabelService implements ILabelService{
 	
 	//Updates an existing note as label
 	@Override
-	public Response updateNoteAsLabel(int labelId, int noteId) {
+	public Response updateNoteAsLabel(int labelId, int noteId, String userToken) {
 		Optional<LabelData> isLabelPresent = labelRepository.findById(labelId);
-		if(isLabelPresent.isPresent()) {
-			Optional<NoteData> isNotePresent = noteRepository.findById(noteId);
-			if(isNotePresent.isPresent()) {
-				log.info("Update Note as Label ");
-				isLabelPresent.get().getNotes().add(isNotePresent.get()); 
-				isNotePresent.get().getLabelList().add(isLabelPresent.get());
-				labelRepository.save(isLabelPresent.get());
-				noteRepository.save(isNotePresent.get());
-				return new Response(200, "Note Updated As Label Successfully", noteId);
+		int userId = tokenUtil.decodeToken(userToken);
+		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
+			if(isLabelPresent.isPresent()) {
+				Optional<NoteData> isNotePresent = noteRepository.findById(noteId);
+				if(isNotePresent.isPresent()) {
+					log.info("Update Note as Label ");
+					isLabelPresent.get().getNotes().add(isNotePresent.get()); 
+					isNotePresent.get().getLabelList().add(isLabelPresent.get());
+					labelRepository.save(isLabelPresent.get());
+					noteRepository.save(isNotePresent.get());
+					return new Response(200, "Note Updated As Label Successfully", noteId);
+				}else {
+					log.error("Note Doesnt Exist");
+					throw new NoteException(400, "Note Doesnt Exist");
+				}	
 			}else {
-				log.error("Note Doesnt Exist");
-				throw new NoteException(400, "Note Doesnt Exist");
-			}
+				log.error("Label Doesnt Exist");
+				throw new NoteException(400, "Label Doesnt Exist");
+			}	
 		}else {
-			log.error("Label Doesnt Exist");
-			throw new NoteException(400, "Label Doesnt Exist");
+			log.error("Label Token Is Not Valid");
+			throw new NoteException(400, "Label Token Is Not Valid");
 		}
 	}
 	
 	//Removes an existing note as label
 	@Override
-	public Response removeNoteAsLabel(int labelId, int noteId) {
+	public Response removeNoteAsLabel(int labelId, int noteId,String userToken) {
 		Optional<LabelData> isLabelPresent = labelRepository.findById(labelId);
-		if(isLabelPresent.isPresent()) {
-			Optional<NoteData> isNotePresent = noteRepository.findById(noteId);
-			if(isNotePresent.isPresent()) {
-				List<NoteData> notes = isLabelPresent.get().getNotes();
-				int noteCheck = 0;
-				for(NoteData n: notes) {
-					if(n==isNotePresent.get()) {
-						noteCheck = 1;
-						break;
-					}
-				}
-				if(noteCheck==1) {
-					log.info("Removed Note From Label ");
-					isLabelPresent.get().getNotes().remove(isNotePresent.get());
-					isNotePresent.get().getLabelList().remove(isLabelPresent.get());
-					labelRepository.save(isLabelPresent.get());
-					noteRepository.save(isNotePresent.get());
-					return new Response(200, "Note Removed From Label Successfully", noteId);
+		int userId = tokenUtil.decodeToken(userToken);
+		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
+			if(isLabelPresent.isPresent()) {
+				Optional<NoteData> isNotePresent = noteRepository.findById(noteId);
+				if(isNotePresent.isPresent()) {
+					List<NoteData> notes = isLabelPresent.get().getNotes();
+					int noteCheck = 0;
+					for(NoteData n: notes) {
+						if(n==isNotePresent.get()) {
+							noteCheck = 1;
+							break;
+						}	
+					}	
+					if(noteCheck==1) {
+						log.info("Removed Note From Label ");
+						isLabelPresent.get().getNotes().remove(isNotePresent.get());
+						isNotePresent.get().getLabelList().remove(isLabelPresent.get());
+						labelRepository.save(isLabelPresent.get());
+						noteRepository.save(isNotePresent.get());
+						return new Response(200, "Note Removed From Label Successfully", noteId);
+					}else {
+						log.error("Note Doesnt Exist In Label");
+						throw new NoteException(400, "Note Doesnt Exist In Label");
+					}	
 				}else {
-					log.error("Note Doesnt Exist In Label");
-					throw new NoteException(400, "Note Doesnt Exist In Label");
+					log.error("Note Doesnt Exist");
+					throw new NoteException(400, "Note Doesnt Exist");
 				}
 			}else {
-				log.error("Note Doesnt Exist");
-				throw new NoteException(400, "Note Doesnt Exist");
-			}
-		}else {
 			log.error("Label Doesnt Exist");
 			throw new NoteException(400, "Label Doesnt Exist");
+			}
+		}else {
+			log.error("Label Token Is Not Valid");
+			throw new NoteException(400, "Label Token Is Not Valid");
 		}
 	}
 	
 	//Deletes an existing label
 	@Override
-	public Response deleteLabel(int labelId) {
+	public Response deleteLabel(int labelId, String userToken) {
 		Optional<LabelData> isPresent = labelRepository.findById(labelId);
-		if(isPresent.isPresent()) {
+		int userId = tokenUtil.decodeToken(userToken);
+		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
+		if(isIdPresent) {
 			log.info("User Data Deleted");
 			labelRepository.delete(isPresent.get());
 			return new Response(200, "Label Deleted Successfully", labelId);

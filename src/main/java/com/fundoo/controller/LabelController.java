@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,8 +34,8 @@ public class LabelController {
 	private ILabelService labelService;
 	
 	//Returns all the labels present
-	@GetMapping("/getalllabels/{userToken}")
-	public ResponseEntity<List<?>> getAllLabels(@PathVariable String userToken) {
+	@GetMapping("/getalllabels")
+	public ResponseEntity<List<?>> getAllLabels(@RequestHeader String userToken) {
 		log.info("Get All Labels");
 		List<LabelData> response = labelService.getAllLabels(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
@@ -42,7 +43,7 @@ public class LabelController {
 	
 	//Creates a new label 
 	@PostMapping("/addnewlabel")
-	public ResponseEntity<Response> createLabel(@RequestParam String userToken,
+	public ResponseEntity<Response> createLabel(@RequestHeader String userToken,
 												@Valid @RequestBody LabelDTO labelDTO) {
 		log.info("Create Label : " + labelDTO);
 		Response response = labelService.addLabel(userToken,labelDTO);
@@ -52,35 +53,39 @@ public class LabelController {
 	//Updates an existing label
 	@PutMapping("/updatelabel/{labelId}")
 	public ResponseEntity<Response> updateLabel(@PathVariable int labelId,
-											    @Valid @RequestBody LabelDTO labelDTO) {
+											    @Valid @RequestBody LabelDTO labelDTO,
+											    @RequestHeader String userToken) {
 		log.info("Update Label : " + labelDTO);
-		Response response  = labelService.updateLabel(labelId, labelDTO);
+		Response response  = labelService.updateLabel(labelId, labelDTO, userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
 	//Updates an existing note as label
 	@PutMapping("/updatenoteaslabel/{labelId}/{noteId}")
 	public ResponseEntity<Response> updateNoteAsLabel(@PathVariable int labelId,
-													  @PathVariable int noteId) {
+													  @PathVariable int noteId,
+													  @RequestHeader String userToken) {
 		log.info("Updated Note As Label");
-		Response response  = labelService.updateNoteAsLabel(labelId, noteId);
+		Response response  = labelService.updateNoteAsLabel(labelId, noteId, userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 		
 	//Removes an existing note as label
 	@PutMapping("/removenoteaslabel/{labelId}/{noteId}")
 	public ResponseEntity<Response> removeNoteAsLabel(@PathVariable int labelId,
-													  @PathVariable int noteId) {
+													  @PathVariable int noteId,
+													  @RequestHeader String userToken) {
 		log.info("Removed Note As Label");
-		Response response  = labelService.removeNoteAsLabel(labelId, noteId);
+		Response response  = labelService.removeNoteAsLabel(labelId, noteId, userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 		
 	//Deletes an existing label
 	@DeleteMapping("/deletelabel")
-	public ResponseEntity<Response> deleteLabel(@RequestParam int labelId) {
+	public ResponseEntity<Response> deleteLabel(@RequestParam int labelId,
+											    @RequestHeader String userToken) {
 		log.info("Label Deleted");
-		Response response  = labelService.deleteLabel(labelId);
+		Response response  = labelService.deleteLabel(labelId, userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 }

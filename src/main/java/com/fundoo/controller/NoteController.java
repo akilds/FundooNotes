@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,40 +35,40 @@ public class NoteController {
 	private INoteService noteService;
 	
 	//Returns all the notes present
-	@GetMapping("/getallnotes/{userToken}")
-	public ResponseEntity<List<?>> getAllNotes(@PathVariable String userToken) {
+	@GetMapping("/getallnotes")
+	public ResponseEntity<List<?>> getAllNotes(@RequestHeader String userToken) {
 		log.info("Get All Notes");
 		List<NoteData> response = noteService.getAllNotes(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
 	}
 	
 	//Returns all the notes in trash
-	@GetMapping("/getallnotesbytrash/{userToken}")
-	public ResponseEntity<List<?>> getAllNotesByTrash(@PathVariable String userToken) {
+	@GetMapping("/getallnotesbytrash")
+	public ResponseEntity<List<?>> getAllNotesByTrash(@RequestHeader String userToken) {
 		log.info("Get All Notes In Trash");
 		List<NoteData> response = noteService.getAllNotesInTrash(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
 	}
 	
 	//Returns all the notes in archieve
-	@GetMapping("/getallnotesbyarchieve/{userId}")
-	public ResponseEntity<List<?>> getAllNotesByArchieve(@PathVariable String userToken) {
+	@GetMapping("/getallnotesbyarchieve")
+	public ResponseEntity<List<?>> getAllNotesByArchieve(@RequestHeader String userToken) {
 		log.info("Get All Notes In Archieve");
 		List<NoteData> response = noteService.getAllNotesInArchieve(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);	
 	}
 	
 	//Returns all the collaborators present
-	@GetMapping("/getallcollaborators/{colabId}")
-	public ResponseEntity<List<?>> getAllCollaborators(@PathVariable int colabId) {
+	@GetMapping("/getallcollaborators")
+	public ResponseEntity<List<?>> getAllCollaborators(@RequestHeader String userToken) {
 		log.info("Get All Notes");
-		List<ColabData> response = noteService.getAllCollaborators(colabId);
+		List<ColabData> response = noteService.getAllCollaborators(userToken);
 		return new ResponseEntity<List<?>>(response, HttpStatus.OK);
 	}
 		
 	//Creates a new note 
-	@PostMapping("/addnewnote/{userToken}")
-	public ResponseEntity<Response> createNote(@PathVariable String userToken,
+	@PostMapping("/addnewnote")
+	public ResponseEntity<Response> createNote(@RequestHeader String userToken,
 											   @Valid @RequestBody NoteDTO noteDTO) {
 		log.info("Create Note : " + noteDTO);
 		Response response = noteService.addNote(userToken,noteDTO);
@@ -75,61 +76,67 @@ public class NoteController {
 	}
 	
 	//Adds a new Collaborator
-	@PostMapping("/addcollaboratortonote/{token}")
-	public ResponseEntity<Response> addCollaboratorToNote(@PathVariable String token,
+	@PostMapping("/addcollaboratortonote")
+	public ResponseEntity<Response> addCollaboratorToNote(@RequestHeader String userToken,
 														  @RequestParam int noteId,
 														  @RequestParam String emailId) {
 		log.info("Collaborator Added To Note");
-		Response response  = noteService.addCollaboratorToNote(token,noteId,emailId);
+		Response response  = noteService.addCollaboratorToNote(userToken,noteId,emailId);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 		
 	//Updates an existing note
 	@PutMapping("/updatenote/{noteId}")
 	public ResponseEntity<Response> updateNote(@PathVariable int noteId,
-											   @Valid @RequestBody NoteDTO noteDTO) {
+											   @Valid @RequestBody NoteDTO noteDTO,
+											   @RequestHeader String userToken) {
 		log.info("Update Note : " + noteDTO);
-		Response response  = noteService.updateNote(noteId, noteDTO);
+		Response response  = noteService.updateNote(noteId, noteDTO,userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
 	//Updates an existing note to archieve
 	@PutMapping("/archievenote/{noteId}")
-	public ResponseEntity<Response> updateNoteToArchieved(@PathVariable int noteId) {
+	public ResponseEntity<Response> updateNoteToArchieved(@PathVariable int noteId,
+														  @RequestHeader String userToken) {
 		log.info("Note Archieved ");
-		Response response  = noteService.updateNoteToArchieved(noteId);
+		Response response  = noteService.updateNoteToArchieved(noteId,userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 
 	//Updates an existing note to pin
 	@PutMapping("/pinnote/{noteId}")
-	public ResponseEntity<Response> updateNoteToPinned(@PathVariable int noteId) {
+	public ResponseEntity<Response> updateNoteToPinned(@PathVariable int noteId,
+													   @RequestHeader String userToken) {
 		log.info("Note Pinned");
-		Response response  = noteService.updateNoteToPinned(noteId);
+		Response response  = noteService.updateNoteToPinned(noteId,userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
 	//Updates an existing note to pin
 	@PutMapping("/trashnote/{noteId}")
-	public ResponseEntity<Response> updateNoteToTrash(@PathVariable int noteId) {
+	public ResponseEntity<Response> updateNoteToTrash(@PathVariable int noteId,
+													  @RequestHeader String userToken) {
 		log.info("Note to Trash");
-		Response response  = noteService.updateNoteToTrash(noteId);
+		Response response  = noteService.updateNoteToTrash(noteId,userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 		
 	//Removes an existing collaborator
 	@DeleteMapping("/removecollaboratorfromnote/{colabId}")
-	public ResponseEntity<Response> removeCollaboratorFromNote(@PathVariable int colabId) {
+	public ResponseEntity<Response> removeCollaboratorFromNote(@PathVariable int colabId,
+															   @RequestHeader String userToken) {
 		log.info("Collaborator Removed From Note");
-		Response response  = noteService.removeCollaboratorFromNote(colabId);
+		Response response  = noteService.removeCollaboratorFromNote(colabId, userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 		
 	//Deletes an existing note
 	@DeleteMapping("/deletenote")
-	public ResponseEntity<Response> deleteNote(@RequestParam int noteId) {
+	public ResponseEntity<Response> deleteNote(@RequestParam int noteId,
+											   @RequestHeader String userToken) {
 		log.info("Note Moved To Trash");
-		Response response  = noteService.deleteNote(noteId);
+		Response response  = noteService.deleteNote(noteId,userToken);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 }

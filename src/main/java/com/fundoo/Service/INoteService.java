@@ -15,25 +15,25 @@ public interface INoteService {
 
 	Response addNote(String userToken,@Valid NoteDTO noteDTO);
 
-	Response updateNote(int noteId, @Valid NoteDTO noteDTO);
+	Response updateNote(int noteId, @Valid NoteDTO noteDTO, String userToken);
 
-	Response deleteNote(int noteId);
+	Response deleteNote(int noteId, String userToken);
 
 	List<NoteData> getAllNotesInTrash(String userToken);
 
 	List<NoteData> getAllNotesInArchieve(String userToken);
 
-	Response updateNoteToArchieved(int noteId);
+	Response updateNoteToArchieved(int noteId, String userToken);
 
-	Response updateNoteToPinned(int noteId);
+	Response updateNoteToPinned(int noteId, String userToken);
 
-	List<ColabData> getAllCollaborators(int colabId);
+	List<ColabData> getAllCollaborators(String userToken);
 
 	Response addCollaboratorToNote(String token, int noteId, String emailId);
 	
-	Response removeCollaboratorFromNote(int colabId);
+	Response removeCollaboratorFromNote(int colabId, String userToken);
 
-	Response updateNoteToTrash(int noteId);
+	Response updateNoteToTrash(int noteId, String userToken);
 
 	
 
