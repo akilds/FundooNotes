@@ -43,7 +43,7 @@ public class NoteService implements INoteService{
 	@Override
 	public List<NoteData> getAllNotes(String userToken) {
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Get All Notes");
@@ -59,7 +59,7 @@ public class NoteService implements INoteService{
 	@Override
 	public List<NoteData> getAllNotesInTrash(String userToken) {
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Get All Notes In Trash");
@@ -75,7 +75,7 @@ public class NoteService implements INoteService{
 	@Override
 	public List<NoteData> getAllNotesInArchieve(String userToken) {
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Get All Notes In Archieve");
@@ -91,7 +91,7 @@ public class NoteService implements INoteService{
 	@Override
 	public List<ColabData> getAllCollaborators(String userToken) {
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Get All Collaborators");
@@ -107,7 +107,7 @@ public class NoteService implements INoteService{
 	@Override
 	public Response addNote(String userToken,NoteDTO noteDTO) {
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Add Note : " + noteDTO);
@@ -126,7 +126,7 @@ public class NoteService implements INoteService{
 	public Response addCollaboratorToNote(String token,int noteId, String emailId) {
 		Optional<NoteData> note = noteRepository.findById(noteId);
 		int userId = tokenUtil.decodeToken(token);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			List<ColabData> colabb = colabRepository.findAll();
@@ -159,7 +159,7 @@ public class NoteService implements INoteService{
 	public Response updateNote(int noteId, NoteDTO noteDTO, String userToken) {		
 		Optional<NoteData> isPresent = noteRepository.findById(noteId);
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Update Note : " + noteDTO);
@@ -177,7 +177,7 @@ public class NoteService implements INoteService{
 	public Response updateNoteToArchieved(int noteId, String userToken) {
 		Optional<NoteData> isPresent = noteRepository.findById(noteId);
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Archieve Status Changed");
@@ -194,7 +194,7 @@ public class NoteService implements INoteService{
 	public Response updateNoteToPinned(int noteId, String userToken) {
 		Optional<NoteData> isPresent = noteRepository.findById(noteId);
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Pinned Status Changed");
@@ -206,11 +206,12 @@ public class NoteService implements INoteService{
 		}	
 	}
 	
+	//Updates an existing note to trash
 	@Override
 	public Response updateNoteToTrash(int noteId, String userToken) {
 		Optional<NoteData> isPresent = noteRepository.findById(noteId);
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Trash Status Changed");
@@ -221,13 +222,14 @@ public class NoteService implements INoteService{
 			throw new NoteException(400, "Note Is Not Present");
 		}	
 	}
+	
 	//Removes an existing Collaborator
 	@Override
 	public Response removeCollaboratorFromNote(int colabId, String userToken) {
 		Optional<ColabData> isPresent = colabRepository.findById(colabId);
 		Optional<NoteData> note = noteRepository.findById(isPresent.get().getNoteId());
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Colab Data Deleted");
@@ -246,7 +248,7 @@ public class NoteService implements INoteService{
 	public Response deleteNote(int noteId, String userToken) {
 		Optional<NoteData> isPresent = noteRepository.findById(noteId);
 		int userId = tokenUtil.decodeToken(userToken);
-		String uri = "http://fundooUser/userregistration/verifyuserid/" + userId;
+		String uri = "http://fundoo-user/userregistration/verifyuserid/" + userId;
 		boolean isIdPresent = restTemplate.getForObject(uri, Boolean.class);
 		if(isIdPresent) {
 			log.info("Note Moved To Trash");
